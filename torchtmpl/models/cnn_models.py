@@ -7,6 +7,7 @@ import operator
 # External imports
 import torch
 import torch.nn as nn
+import torchvision
 
 
 def conv_relu_bn(cin, cout):
@@ -44,3 +45,11 @@ def VanillaCNN(cfg, input_size, num_classes):
     num_features = reduce(operator.mul, out_cnn.shape[1:], 1)
     out_layers = [nn.Flatten(start_dim=1), nn.Linear(num_features, num_classes)]
     return nn.Sequential(conv_model, *out_layers)
+
+
+def resnet18(cfg, input_size, num_classes):
+    return torchvision.models.resnet18(num_classes=num_classes)
+
+
+def resnet34(cfg, input_size, num_classes):
+    return torchvision.models.resnet34(num_classes=num_classes)
