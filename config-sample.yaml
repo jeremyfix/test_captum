@@ -1,16 +1,16 @@
 data:
-  trainpath: '/opt/Datasets/'
+  trainpath: '/dummy/path/to/train'
   # testpath: '/dummy/path/to/test'
   batch_size: 256
   num_workers: 4
   valid_ratio: 0.2
 
 optim:
-  algo: SGD
+  algo: Adam
   params:
-    lr: 0.01
+    lr: 0.003
 
-nepochs: 20
+nepochs: 40
 loss: "CrossEntropyLoss"
 
 logging:
@@ -21,5 +21,4 @@ logging:
 # model:
 #   class: Linear
 model:
-  class: VanillaCNN
-  num_layers : 4
+  class: resnet18
