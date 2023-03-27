@@ -36,7 +36,6 @@ def train(config):
     # Build the dataloaders
     logging.info("= Building the dataloaders")
     data_config = config["data"]
-
     train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
         data_config, use_cuda
     )
@@ -71,7 +70,6 @@ def train(config):
         yaml.dump(config, file)
 
     # Make a summary script of the experiment
-    input_size = next(iter(train_loader))[0].shape
     summary_text = (
         f"Logdir : {logdir}\n"
         + "## Command \n"
@@ -80,7 +78,7 @@ def train(config):
         + f" Config : {config} \n\n"
         + (f" Wandb run name : {wandb.run.name}\n\n" if wandb_log is not None else "")
         + "## Summary of the model architecture\n"
-        + f"{torchinfo.summary(model, input_size=input_size)}\n\n"
+        + f"{torchinfo.summary(model, input_size=(1, ) + input_size)}\n\n"
         + "## Loss\n\n"
         + f"{loss}\n\n"
         + "## Datasets : \n"
@@ -95,7 +93,12 @@ def train(config):
 
     # Define the early stopping callback
     model_checkpoint = utils.ModelCheckpoint(
-        model, str(logdir / "best_model.pt"), min_is_best=True
+        model,
+        str(logdir / "best_model.pt"),
+        str(logdir / "best_model.onnx"),
+        input_size,
+        device,
+        min_is_best=True,
     )
 
     for e in range(config["nepochs"]):

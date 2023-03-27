@@ -36,11 +36,17 @@ class ModelCheckpoint(object):
     def __init__(
         self,
         model: torch.nn.Module,
-        savepath,
+        savepath_pt,
+        savepath_onnx,
+        input_size,
+        device,
         min_is_best: bool = True,
     ) -> None:
         self.model = model
-        self.savepath = savepath
+        self.savepath_pt = savepath_pt
+        self.savepath_onnx = savepath_onnx
+        self.input_size = input_size
+        self.device = device
         self.best_score = None
         if min_is_best:
             self.is_better = self.lower_is_better
@@ -55,7 +61,18 @@ class ModelCheckpoint(object):
 
     def update(self, score):
         if self.is_better(score):
-            torch.save(self.model.state_dict(), self.savepath)
+            torch.save(self.model.state_dict(), self.savepath_pt)
+            self.model.eval()
+            export_input_size = (1,) + self.input_size
+            torch.onnx.export(
+                self.model,
+                torch.zeros(export_input_size, device=self.device),
+                self.savepath_onnx,
+                verbose=False,
+                input_names=["input"],
+                output_names=["output"],
+                dynamic_axes={"input": {0: "batch"}, "output": {0: "batch"}},
+            )
             self.best_score = score
             return True
         return False
