@@ -21,6 +21,13 @@ def show_image(X):
     plt.show()
 
 
+def to_color(xi):
+    c, _, _ = xi.shape
+    if c == 1:
+        xi = xi.repeat(3, 1, 1)
+    return xi
+
+
 def get_dataloaders(data_config, use_cuda):
     valid_ratio = data_config["valid_ratio"]
     batch_size = data_config["batch_size"]
@@ -29,7 +36,12 @@ def get_dataloaders(data_config, use_cuda):
     logging.info("  - Dataset creation")
 
     input_transform = transforms.Compose(
-        [transforms.Grayscale(), transforms.Resize((128, 128)), transforms.ToTensor()]
+        [
+            transforms.Resize((128, 128)),
+            transforms.ToTensor(),
+            to_color,
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        ]
     )
 
     base_dataset = torchvision.datasets.Caltech101(
