@@ -78,7 +78,7 @@ class ModelCheckpoint(object):
         return False
 
 
-def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
+def train(model, loader, f_loss, optimizer, device, fn_metrics, dynamic_display=True):
     """
     Train a model for one epoch, iterating over the loader
     using the f_loss to compute the loss and the optimizer
@@ -99,7 +99,10 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
 
     total_loss = 0
     num_samples = 0
-    for i, (inputs, targets) in (pbar := tqdm.tqdm(enumerate(loader))):
+    for _, fn_metrics_i in fn_metrics.items():
+        fn_metrics_i.reset()
+
+    for i, (inputs, targets) in (pbar := tqdm.tqdm(enumerate(loader), file=sys.stdout)):
 
         inputs, targets = inputs.to(device), targets.to(device)
 
@@ -117,12 +120,21 @@ def train(model, loader, f_loss, optimizer, device, dynamic_display=True):
         # We here consider the loss is batch normalized
         total_loss += inputs.shape[0] * loss.item()
         num_samples += inputs.shape[0]
-        pbar.set_description(f"Train loss : {total_loss/num_samples:.2f}")
+
+        for _, fn_metrics_i in fn_metrics.items():
+            fn_metrics_i.update(outputs, targets)
+
+        metrics_str = " | ".join(
+            f"{name}: {metric.value():.2f}" for name, metric in fn_metrics.items()
+        )
+        pbar.set_description(
+            f"Train loss : {total_loss/num_samples:.2f} | {metrics_str}"
+        )
 
     return total_loss / num_samples
 
 
-def test(model, loader, f_loss, device):
+def test(model, loader, f_loss, device, fn_metrics):
     """
     Test a model over the loader
     using the f_loss as metrics
@@ -140,6 +152,8 @@ def test(model, loader, f_loss, device):
 
     total_loss = 0
     num_samples = 0
+    for _, fn_metrics_i in fn_metrics.items():
+        fn_metrics_i.reset()
     for (inputs, targets) in loader:
 
         inputs, targets = inputs.to(device), targets.to(device)
@@ -148,6 +162,9 @@ def test(model, loader, f_loss, device):
         outputs = model(inputs)
 
         loss = f_loss(outputs, targets)
+
+        for _, fn_metrics_i in fn_metrics.items():
+            fn_metrics_i.update(outputs, targets)
 
         # Update the metrics
         # We here consider the loss is batch normalized
