@@ -37,9 +37,10 @@ def train(config):
     # Build the dataloaders
     logging.info("= Building the dataloaders")
     data_config = config["data"]
-    train_loader, valid_loader, input_size, num_classes = data.get_dataloaders(
+    train_loader, valid_loader, input_size, classes = data.get_dataloaders(
         data_config, use_cuda
     )
+    num_classes = len(classes)
 
     # Build the model
     logging.info("= Model")
