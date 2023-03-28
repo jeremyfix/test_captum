@@ -37,7 +37,11 @@ def get_dataloaders(data_config, use_cuda):
 
     input_transform = transforms.Compose(
         [
-            transforms.Resize((128, 128)),
+            transforms.Resize((256, 256)),
+            # transforms.Resize((192, 192)),
+            # transforms.RandomCrop((128, 128)),
+            transforms.RandomHorizontalFlip(0.5),
+            transforms.RandomVerticalFlip(0.5),
             transforms.ToTensor(),
             to_color,
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
