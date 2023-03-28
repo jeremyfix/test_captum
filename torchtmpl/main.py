@@ -17,6 +17,7 @@ from . import data
 from . import models
 from . import optim
 from . import utils
+from . import metrics
 
 
 def train(config):
@@ -101,29 +102,41 @@ def train(config):
         min_is_best=True,
     )
 
+    fn_metrics = {"CEloss": metrics.CE(), "accuracy": metrics.Accuracy()}
+
     for e in range(config["nepochs"]):
         # Train 1 epoch
-        train_loss = utils.train(model, train_loader, loss, optimizer, device)
+        train_loss = utils.train(
+            model, train_loader, loss, optimizer, device, fn_metrics
+        )
+        train_metrics = {name: metric.value() for name, metric in fn_metrics.items()}
 
         # Test
-        test_loss = utils.test(model, valid_loader, loss, device)
+        test_loss = utils.test(model, valid_loader, loss, device, fn_metrics)
+        test_metrics = {name: metric.value() for name, metric in fn_metrics.items()}
+        test_metrics_str = " | ".join(
+            f"{name}: {value:.2f}" for name, value in test_metrics.items()
+        )
 
         updated = model_checkpoint.update(test_loss)
         logging.info(
-            "[%d/%d] Test loss : %.3f %s"
+            "[%d/%d] Test loss : %.3f | %s %s"
             % (
                 e,
                 config["nepochs"],
                 test_loss,
+                test_metrics_str,
                 "[>> BETTER <<]" if updated else "",
             )
         )
 
         # Update the dashboard
-        metrics = {"train_CE": train_loss, "test_CE": test_loss}
+        metrics_value = {"train_CE": train_loss, "test_CE": test_loss}
         if wandb_log is not None:
             logging.info("Logging on wandb")
-            wandb_log(metrics)
+            wandb_log(metrics_value)
+            wandb_log({f"test_{name}": value for name, value in test_metrics.items()})
+            wandb_log({f"train_{name}": value for name, value in train_metrics.items()})
 
 
 def test(config):
