@@ -1,21 +1,6 @@
-# Template base code for pytorch
+# Experiments with captum for visualizing deep learning models
 
-This repository contains a template base code for a complete pytorch pipeline.
-
-This is a template because it works on fake data but aims to illustrate some pythonic syntax allowing the pipeline to be modular.
-
-More specifically, this template base code aims to target :
-
-- modularity : allowing to change models/optimizers/ .. and their hyperparameters easily
-- reproducibility : saving the commit id, ensuring every run saves its assets in a different directory, recording a summary card for every experiment, building a virtual environnement
-
-For the last point, if you ever got a good model as an orphane pytorch tensor whithout being able to remember in which conditions, with which parameters and so on you got, you see what I mean. 
-
-## Usage
-
-### Local experimentation
-
-For a local experimentation, you start by setting up the environment :
+## Initial setup
 
 ```
 python3 -m virtualenv venv
@@ -23,43 +8,28 @@ source venv/bin/activate
 python -m pip install .
 ```
 
-Then you can run a training, by editing the yaml file, then 
+## Training a model
+
+After sourcing the virtual environmnet
 
 ```
 python -m torchtmpl.main config.yml train
 ```
 
-And for testing (**not yet implemented**)
+With the sample configuration file, with a resnet18, you should get around 77% of validation accuracy after 100 epochs.
+
+## Visualiation with captum
+
+Once a model is trained, you can run the captum insights visualization tool.
+
+The trained model is saved in the `logs` subdirectory. You need to provide the specific run you want to visualize. For example, for visualizing the run saved in `logs/resnet18_0` :
 
 ```
-python main.py path/to/your/run test
+python -m torchtmpl.visualize logs/resnet18_0/
 ```
 
-### Cluster experimentation (**not yet implemented**)
+That should start the flask application to which you can connect with your browser and then experiment with the visualization algorithms. An example is displayed below.
 
-For running the code on a cluster, we provide an example script for starting an experimentation on a SLURM based cluster.
+![alt text](https://github.com/jeremyfix/test_captum/blob/main/images/occlusion.png?raw=true)
 
-The script we provide is dedicated to a use on our clusters and you may need to adapt it to your setting. 
-
-Then running the simulation can be as simple as :
-
-```
-python3 submit.py
-```
-
-## Testing the functions
-
-Every module/script is equiped with some test functions. Although these are not unitary tests per se, they nonetheless illustrate how to test the provided functions.
-
-For example, you can call :
-
-
-```
-python3 -m virtualenv venv
-source venv/bin/activate
-python -m pip install .
-python -m torchtmpl.models
-```
-
-and this will call the test functions in the `torchtmpl/models/__main__.py` script.
 
